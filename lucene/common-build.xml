@@ -301,7 +301,7 @@
     <property name="ivy_install_path" location="${user.home}/.ant/lib" />
     <mkdir dir="${ivy_install_path}"/>
     <echo message="installing ivy ${ivy.bootstrap.version} to ${ivy_install_path}"/>
-    <get src="http://repo1.maven.org/maven2/org/apache/ivy/ivy/${ivy.bootstrap.version}/ivy-${ivy.bootstrap.version}.jar"
+    <get src="https://repo1.maven.org/maven2/org/apache/ivy/ivy/${ivy.bootstrap.version}/ivy-${ivy.bootstrap.version}.jar"
          dest="${ivy_install_path}/ivy-${ivy.bootstrap.version}.jar" usetimestamp="true"/>
   </target>
 

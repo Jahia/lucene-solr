@@ -53,7 +53,7 @@ select $previously_selected;
 
 my $apache_url_suffix = "lucene/java/$version/lucene-$version.zip.asc";
 my $apache_mirrors_list_url = "http://www.apache.org/mirrors/";
-my $maven_url = "http://repo1.maven.org/maven2/org/apache/lucene/lucene-core/$version/lucene-core-$version.pom.asc";
+my $maven_url = "https://repo1.maven.org/maven2/org/apache/lucene/lucene-core/$version/lucene-core-$version.pom.asc";
 
 my $agent = LWP::UserAgent->new();
 $agent->timeout(2);
