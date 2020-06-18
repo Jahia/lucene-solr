@@ -92,7 +92,7 @@ import java.util.*;
  * acronym UTC was chosen as a compromise."
  * </blockquote>
  *
- * @version $Id$
+ * @version $Id: DateField.java 1298427 2012-03-08 15:22:27Z janhoy $
  * @see <a href="http://www.w3.org/TR/xmlschema-2/#dateTime">XML schema part 2</a>
  *
  */
@@ -150,8 +150,8 @@ public class DateField extends PrimitiveFieldType {
       if (0 < zz) {
         math = val.substring(zz+1);
         try {
-          // p.setNow(toObject(val.substring(0,zz)));
-          p.setNow(parseDate(val.substring(0,zz+1)));
+          p.setNow(toObject(val.substring(0,zz)));
+          // p.setNow(parseDate(val.substring(0,zz+1)));
         } catch (ParseException e) {
           throw new SolrException( SolrException.ErrorCode.BAD_REQUEST,
                                    "Invalid Date in Date Math String:'"
@@ -181,7 +181,11 @@ public class DateField extends PrimitiveFieldType {
 
   @Override
   public String indexedToReadable(String indexedForm) {
-    return indexedForm + Z;
+    return indexedToReadable(indexedForm, false);
+  }
+
+  public String indexedToReadable(String indexedForm, boolean withMillis) {
+    return indexedForm + (withMillis ? ".000" : "") + Z;
   }
 
   @Override

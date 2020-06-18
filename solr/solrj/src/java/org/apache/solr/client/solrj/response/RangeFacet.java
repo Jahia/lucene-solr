@@ -34,7 +34,7 @@ public abstract class RangeFacet<B, G> {
 
   private final Number before;
   private final Number after;
-
+  
   protected RangeFacet(String name, B start, B end, G gap, Number before, Number after) {
     this.name = name;
     this.start = start;
@@ -75,7 +75,7 @@ public abstract class RangeFacet<B, G> {
   public Number getAfter() {
     return after;
   }
-
+  
   public static class Numeric extends RangeFacet<Number, Number> {
 
     public Numeric(String name, Number start, Number end, Number gap, Number before, Number after) {
@@ -96,6 +96,7 @@ public abstract class RangeFacet<B, G> {
 
     private final String value;
     private final int count;
+    private String filterQuery = null;  
     private final RangeFacet rangeFacet;
 
     public Count(String value, int count, RangeFacet rangeFacet) {
@@ -115,6 +116,17 @@ public abstract class RangeFacet<B, G> {
     public RangeFacet getRangeFacet() {
       return rangeFacet;
     }
-  }
+    
+    public String getAsFilterQuery() {
+        return getFilterQuery();
+    }  
+    
+    public String getFilterQuery() {
+        return filterQuery;
+    }
 
+    public void setFilterQuery(String filterQuery) {
+        this.filterQuery = filterQuery;
+    }
+  }
 }

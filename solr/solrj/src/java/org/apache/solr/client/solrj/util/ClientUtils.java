@@ -23,32 +23,36 @@ import java.io.Writer;
 import java.net.URLEncoder;
 import java.text.DateFormat;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.TimeZone;
-import java.nio.ByteBuffer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.httpclient.util.DateParseException;
-
+import org.apache.commons.httpclient.util.DateUtil;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.common.SolrInputField;
 import org.apache.solr.common.params.SolrParams;
-import org.apache.solr.common.util.*;
+import org.apache.solr.common.util.ContentStream;
+import org.apache.solr.common.util.ContentStreamBase;
+import org.apache.solr.common.util.XML;
 
 
 /**
  * TODO? should this go in common?
  * 
- * @version $Id$
+ * @version $Id: ClientUtils.java 679647 2008-07-25 02:46:02Z ryan $
  * @since solr 1.3
  */
 public class ClientUtils 
 {
   // Standard Content types
-  public static final String TEXT_XML = "application/xml; charset=UTF-8";  
+  public static final String TEXT_XML = "text/xml; charset=utf-8";  
   
   /**
    * Take a string and make it an iterable ContentStream
@@ -57,17 +61,17 @@ public class ClientUtils
   {
     if( str == null )
       return null;
-
+    
     ArrayList<ContentStream> streams = new ArrayList<ContentStream>( 1 );
     ContentStreamBase ccc = new ContentStreamBase.StringStream( str );
     ccc.setContentType( contentType );
     streams.add( ccc );
     return streams;
   }
-
+  
   /**
    * @param d SolrDocument to convert
-   * @return a SolrInputDocument with the same fields and values as the
+   * @return a SolrInputDocument with the same fields and values as the 
    *   SolrDocument.  All boosts are 1.0f
    */
   public static SolrInputDocument toSolrInputDocument( SolrDocument d )
@@ -91,44 +95,38 @@ public class ClientUtils
     }
     return doc;
   }
-
+  
   //------------------------------------------------------------------------
   //------------------------------------------------------------------------
-
+  
   public static void writeXML( SolrInputDocument doc, Writer writer ) throws IOException
   {
     writer.write("<doc boost=\""+doc.getDocumentBoost()+"\">");
-
+   
     for( SolrInputField field : doc ) {
       float boost = field.getBoost();
       String name = field.getName();
       for( Object v : field ) {
         if (v instanceof Date) {
-          v = DateUtil.getThreadLocalDateFormat().format( (Date)v );
-        }else if (v instanceof byte[]) {
-          byte[] bytes = (byte[]) v;
-          v = Base64.byteArrayToBase64(bytes, 0,bytes.length);
-        } else if (v instanceof ByteBuffer) {
-          ByteBuffer bytes = (ByteBuffer) v;
-          v = Base64.byteArrayToBase64(bytes.array(), bytes.position(),bytes.limit() - bytes.position());
+          v = fmtThreadLocal.get().format( (Date)v );
         }
-
         if( boost != 1.0f ) {
-          XML.writeXML(writer, "field", v.toString(), "name", name, "boost", boost );
-        } else if (v != null) {
-          XML.writeXML(writer, "field", v.toString(), "name", name );
+          XML.writeXML(writer, "field", v.toString(), "name", name, "boost", boost ); 
         }
-
+        else {
+          XML.writeXML(writer, "field", v.toString(), "name", name ); 
+        }
+        
         // only write the boost for the first multi-valued field
         // otherwise, the used boost is the product of all the boost values
-        boost = 1.0f;
+        boost = 1.0f; 
       }
     }
     writer.write("</doc>");
   }
+  
 
-
-  public static String toXML( SolrInputDocument doc )
+  public static String toXML( SolrInputDocument doc ) 
   {
     StringWriter str = new StringWriter();
     try {
@@ -137,67 +135,70 @@ public class ClientUtils
     catch( Exception ex ){}
     return str.toString();
   }
-
+  
   //---------------------------------------------------------------------------------------
 
-  /**
-   * @deprecated Use {@link org.apache.solr.common.util.DateUtil#DEFAULT_DATE_FORMATS}
-   */
-  @Deprecated
-  public static final Collection<String> fmts = DateUtil.DEFAULT_DATE_FORMATS;
-
+  public static final Collection<String> fmts = new ArrayList<String>();
+  static {
+    fmts.add( "yyyy-MM-dd'T'HH:mm:ss'Z'" );
+    fmts.add( "yyyy-MM-dd'T'HH:mm:ss" );
+    fmts.add( "yyyy-MM-dd" );
+  }
+  
   /**
    * Returns a formatter that can be use by the current thread if needed to
    * convert Date objects to the Internal representation.
-   * @throws ParseException
-   * @throws DateParseException
-   *
-   * @deprecated Use {@link org.apache.solr.common.util.DateUtil#parseDate(String)}
+   * @throws ParseException 
+   * @throws DateParseException 
    */
-  @Deprecated
-  public static Date parseDate( String d ) throws ParseException, DateParseException
+  public static Date parseDate( String d ) throws ParseException, DateParseException 
   {
-    return DateUtil.parseDate(d);
+    // 2007-04-26T08:05:04Z
+    if( d.endsWith( "Z" ) && d.length() > 20 ) {
+      return getThreadLocalDateFormat().parse( d );
+    }
+    return DateUtil.parseDate( d, fmts ); 
   }
-
+  
   /**
    * Returns a formatter that can be use by the current thread if needed to
    * convert Date objects to the Internal representation.
-   *
-   * @deprecated use {@link org.apache.solr.common.util.DateUtil#getThreadLocalDateFormat()}
    */
-  @Deprecated
   public static DateFormat getThreadLocalDateFormat() {
-
-    return DateUtil.getThreadLocalDateFormat();
+  
+    return fmtThreadLocal.get();
   }
 
-  /**
-   * @deprecated Use {@link org.apache.solr.common.util.DateUtil#UTC}.
-   */
-  @Deprecated
-  public static TimeZone UTC = DateUtil.UTC;
-
-
-
-  /**
-   * See: <a href="http://lucene.apache.org/java/docs/nightly/queryparsersyntax.html#Escaping%20Special%20Characters">Escaping Special Characters</a>
-   */
-  public static String escapeQueryChars(String s) {
-    StringBuilder sb = new StringBuilder();
-    for (int i = 0; i < s.length(); i++) {
-      char c = s.charAt(i);
-      // These characters are part of the query syntax and must be escaped
-      if (c == '\\' || c == '+' || c == '-' || c == '!'  || c == '(' || c == ')' || c == ':'
-        || c == '^' || c == '[' || c == ']' || c == '\"' || c == '{' || c == '}' || c == '~'
-        || c == '*' || c == '?' || c == '|' || c == '&'  || c == ';'
-        || Character.isWhitespace(c)) {
-        sb.append('\\');
-      }
-      sb.append(c);
+  public static TimeZone UTC = TimeZone.getTimeZone("UTC");
+  private static ThreadLocalDateFormat fmtThreadLocal = new ThreadLocalDateFormat();
+  
+  private static class ThreadLocalDateFormat extends ThreadLocal<DateFormat> {
+    DateFormat proto;
+    public ThreadLocalDateFormat() {
+      super();
+                                    //2007-04-26T08:05:04Z
+      SimpleDateFormat tmp = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+      tmp.setTimeZone(UTC);
+      proto = tmp;
     }
-    return sb.toString();
+    
+    @Override
+    protected DateFormat initialValue() {
+      return (DateFormat) proto.clone();
+    }
   }
+  
+  private static final Pattern escapePattern = Pattern.compile( "(\\W)" );
+  
+  /**
+   * See: http://lucene.apache.org/java/docs/queryparsersyntax.html#Escaping Special Characters
+   */
+  public static String escapeQueryChars( String input ) 
+  {
+    Matcher matcher = escapePattern.matcher( input );
+    return matcher.replaceAll( "\\\\$1" );
+  }
+  
 
   public static String toQueryString( SolrParams params, boolean xml ) {
     StringBuilder sb = new StringBuilder(128);
