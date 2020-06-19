@@ -8,7 +8,13 @@ then execute :
 
 # Build :
 
-Build / deploy snapshots :
+```ant compile```
+
+You may have to set LC_LOCALE first (on mac) : 
+
+```export LC_ALL=en_US.UTF-8```
+
+# Build / deploy snapshots :
 
 ```ant -Dm2.repository.id=thirdparty-snapshots -Dm2.repository.url=https://devtools.jahia.com/nexus/content/repositories/thirdparty-snapshots/ generate-maven-artifacts```
 
