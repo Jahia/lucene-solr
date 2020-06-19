@@ -402,7 +402,6 @@
     <attribute name="pom.xml"/>
     <attribute name="jar.file" default="${build.dir}/${final.name}.jar"/>
     <sequential>
-      <artifact:install-provider artifactId="wagon-ssh" version="1.0-beta-7"/>
       <artifact:pom id="maven.project" file="@{pom.xml}"/>
       <artifact:deploy file="@{jar.file}">
         <artifact-attachments/>
@@ -1028,6 +1027,8 @@
           </script>
         ]]></bottom>
       	
+        <arg value="--allow-script-in-comments"/>
+        <arg value="-Xdoclint:none"/>
       	<sources />
       	      	
         <classpath refid="javadoc.classpath"/>

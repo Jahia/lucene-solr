@@ -1,4 +1,4 @@
-
+*.jar
 
 # .
 /classes
@@ -18,7 +18,6 @@
 /bin
 /pom.xml
 
-
 # ./lucene
 /lucene/build
 /lucene/dist
@@ -35,7 +34,6 @@
 /lucene/prj.el
 /lucene/pom.xml
 
-
 # ./lucene/core/src/java/org/apache/lucene/analysis/standard
 /lucene/core/src/java/org/apache/lucene/analysis/standard/Token.java
 /lucene/core/src/java/org/apache/lucene/analysis/standard/StandardTokenizer.java
@@ -43,6 +41,7 @@
 /lucene/core/src/java/org/apache/lucene/analysis/standard/TokenMgrError.java
 /lucene/core/src/java/org/apache/lucene/analysis/standard/CharStream.java
 /lucene/core/src/java/org/apache/lucene/analysis/standard/StandardTokenizerConstants.java
+/lucene/core/pom.xml
 
 
 # ./lucene/core/src/java/org/apache/lucene/queryParser
@@ -53,6 +52,8 @@
 /lucene/core/src/java/org/apache/lucene/queryParser/TokenManager.java
 /lucene/core/src/java/org/apache/lucene/queryParser/QueryParserConstants.java
 
+# ./lucene/test-framework
+/lucene/test-framework/pom.xml
 
 # ./lucene/backwards/src/test-framework
 /lucene/backwards/src/test-framework/pom.xml
